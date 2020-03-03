@@ -110,6 +110,14 @@ ENV/
 env.bak/
 venv.bak/
 
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
 # Spyder project settings
 .spyderproject
 .spyproject
