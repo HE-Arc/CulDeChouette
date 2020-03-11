@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 
 
 
+
 class Register(View):
     def post(self,request):
         form = UserCreationForm(request.POST)
@@ -19,7 +20,6 @@ class Register(View):
     def get(self,request):
         form = UserCreationForm()
         return render(request,'users/register.html',{'form':form})
-
 
 class ProfileView(View):
     def get(self,request):
