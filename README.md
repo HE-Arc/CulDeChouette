@@ -4,3 +4,4 @@ Implémentation en ligne du jeu du cul de chouette (jeu de dés inspiré de la s
 
 # A installer
 * pip install django-crispy-forms
+* python3 -m pip install channels_redis
