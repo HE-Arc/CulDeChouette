@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.views import View
 from django.contrib.auth.models import User
+from main.models import Game
+from main.models import Play
 
 
 
@@ -23,4 +25,8 @@ class Register(View):
 
 class ProfileView(View):
     def get(self,request):
-        return render(request,'users/profile.html',{})
+        context = {''}
+        user_id = request.user.id
+        results = Play.objects.filter(IDPlayer = user_id).select_related('IDGame').all()
+
+        return render(request,'users/profile.html',{'results':results})

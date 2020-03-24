@@ -27,8 +27,22 @@
             </tr>
         </table>
         <h4>Results</h4>
-        <p>#TODO</p>
-    </div>
+        {% if results %}
+
+            {% for result in results %}
+            <div class="border rounded mt-5 p-2">
+            <h2 class="">{{ result.IDGame.name }}</h2>
+            <p>{{ result.IDGame.date|date:"d.m.Y" }}</p>
+            <p>Winner : {{ result.IDGame.winner }}</p>
+            <p>{{user.username}}'s score : {{ result.score }}</p>
+
+            </div>
+            {% endfor %}
+        {% else %}
+
+        <h1>There are currently no Results</h1>
+        {% endif %}
+        </div>
     </div>
 </div>
 {% endblock content %}
