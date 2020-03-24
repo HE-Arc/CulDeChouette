@@ -1,5 +1,5 @@
 # CulDeChouette
-Implémentation en ligne du jeu du cul de chouette (jeu de dés). Adaptation des règles.
+Implémentation en ligne du jeu du cul de chouette (jeu de dés inspiré de la série Kaamelott). Adaptation des règles.
 
 
 # A installer
