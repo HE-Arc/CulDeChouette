@@ -5,13 +5,18 @@
     <title>Chat Room</title>
 </head>
 <body>
+    <h4>Connected as {{user.username}}</h4>
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-message-submit" type="button" value="Send">
     {{ room_name|json_script:"room-name" }}
+    {{ user |json_script:"user" }}
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
-
+        user = JSON.parse(document.getElementById('user').textContent);
+        user = JSON.parse(user);
+        const username = user.fields.username;
+        const id = user.pk
         const chatSocket = new WebSocket(
             'ws://'
             + window.location.host
@@ -38,7 +43,7 @@
 
         document.querySelector('#chat-message-submit').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
+            const message = "["+username+"]"+messageInputDom.value;
             chatSocket.send(JSON.stringify({
                 'message': message
             }));
