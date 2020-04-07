@@ -25,7 +25,7 @@ SECRET_KEY = 'me7@ryo+hez+v1rc^d048(bjj-04sagzmi0rx45d2yt*cz+utf'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [culdechouette.srvz-webapp.he-arc.ch]
+ALLOWED_HOSTS = ["127.0.0.1","culdechouette.srvz-webapp.he-arc.ch"]
 
 
 # Application definition
