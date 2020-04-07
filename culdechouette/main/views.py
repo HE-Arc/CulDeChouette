@@ -1,8 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.views.generic.list import ListView
+from django.views.generic.edit import CreateView
 from .models import Game
 from django.views import generic, View
+import datetime
 
 
 # Create your views here.
@@ -12,3 +14,16 @@ class HomeView(generic.TemplateView):
         context = super().get_context_data(**kwargs)
         context['games'] = Game.objects.all()
         return context
+
+class CreateView(CreateView):
+    model = Game
+    fields = ['name']
+
+    def form_valid(self, form):
+        model = form.save()
+        model.date = datetime.datetime.now()
+        model.isActive = True
+        model.isFull = False
+        model.save()
+        return redirect('home')
+  
