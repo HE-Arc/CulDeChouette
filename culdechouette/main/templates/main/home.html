@@ -7,7 +7,7 @@
     <div class="border rounded mt-5 p-2">
       <h2 class="">{{ game.name }}</h2>
       <p>{{ game.date|date:"d.m.Y" }}</p>
-      <a class="btn btn-outline-info" href="{% url 'room' room_name=game.name %}">Join</a>
+      <a class="btn btn-outline-info" href="{% url 'game' room_name=game.name %}">Join</a>
     </div>
     {% endfor %}
   {% else %}
