@@ -2,6 +2,8 @@ from django.shortcuts import render,redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.views import View
+from django.contrib.auth.models import User
+
 
 
 
@@ -18,3 +20,7 @@ class Register(View):
     def get(self,request):
         form = UserCreationForm()
         return render(request,'users/register.html',{'form':form})
+
+class ProfileView(View):
+    def get(self,request):
+        return render(request,'users/profile.html',{})

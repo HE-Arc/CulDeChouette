@@ -1,0 +1,34 @@
+{% extends "main/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <div>
+        <h3>{{ user.username }}'s profile</h3>
+    </div>
+    <div>
+        <h4>Informations</h4>
+
+        <table>
+            <tr>
+                <td>Username : </td>
+                <td>{{ user.username }}</td>
+            </tr>
+            <tr>
+                <td>Firstname : </td>
+                <td>{{ user.first_name }}</td>
+            </tr>
+            <tr>
+                <td>Lastname : </td>
+                <td>{{ user.last_name }}</td>
+            </tr>
+            <tr>
+                <td>E-mail : </td>
+                <td>{{ user.email }}</td>
+            </tr>
+        </table>
+        <h4>Results</h4>
+        <p>#TODO</p>
+    </div>
+    </div>
+</div>
+{% endblock content %}
