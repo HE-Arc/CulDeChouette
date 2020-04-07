@@ -20,6 +20,7 @@ from users import views as user_views
 from django.contrib.auth.decorators import login_required
 
 urlpatterns = [
+    path('chat/', include('chat.urls')),
     path('admin/', admin.site.urls),
     path('register/',user_views.Register.as_view(), name="register"),
     path('login/',auth_views.LoginView.as_view(template_name='users/login.html'), name="login"),

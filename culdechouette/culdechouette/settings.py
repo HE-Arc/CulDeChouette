@@ -31,6 +31,8 @@ ALLOWED_HOSTS = [culdechouette.srvz-webapp.he-arc.ch]
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'chat',
     'users.apps.UsersConfig',
     'main.apps.MainConfig',
     'django.contrib.admin',
@@ -72,6 +74,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'culdechouette.wsgi.application'
 
+ASGI_APPLICATION = 'culdechouette.routing.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
