@@ -17,24 +17,27 @@
 
 <div id="container">
     <div id="game_table">
-        <div id="score">
-            <p>Scores</p>
+        <div >
+            <p id="score">Scores</p>
             <!--TODO : Add dynamic scores of actives players-->
         </div>
-        <h4>Lel's turn</h4> <!--TODO : Add current player's name in lieu of Lel-->
+        <h4 id="active_player">Lel's turn</h4> <!--TODO : Add current player's name in lieu of Lel-->
         <canvas id="dice_table" width="1000" height="300"></canvas><br>
         <button>Grelotte ça picote !</button>
         <button>Pas mou le caillou !</button>
-        <button>Throw dices</button>
+        <input type="button" value="Throw dices" id="dice_throw">
 
         <script>
+        function setCnvText(text, x, y){
             let diceTable = document.getElementById("dice_table");
             let ctx = diceTable.getContext("2d");
             ctx.fillStyle = "#FF0000";
             ctx.fillRect(0,0,1000,300);
             ctx.font = "50px Arial";
             ctx.fillStyle = "#FFFFFF";
-            ctx.fillText("Replaced by rolling dices asap", 150, 150);
+            ctx.fillText(text, x, y);
+        }
+            setCnvText("Replaced by rolling dices asap", 150, 150)
         </script>
     </div>
 
@@ -45,6 +48,7 @@
         <input id="chat-message-submit" type="button" value="Send">
         {{ room_name|json_script:"room-name" }}
         {{ user |json_script:"user" }}
+        {{ users |json_script:"users"}}
 
         <script>
             const roomName = JSON.parse(document.getElementById('room-name').textContent);
@@ -64,7 +68,27 @@
 
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
-                document.querySelector('#chat-log').value += (data.message + '\n');
+                if(data.type == "chat_message"){
+                    document.querySelector('#chat-log').value += (data.message + '\n');
+                }
+                else if(data.type == "config_message")
+                {
+                    document.querySelector('#score').textContent = data.message;
+                    document.querySelector('#active_player').textContent = data.active_player + "'s turn";
+                    
+                    if(data.active_player != username)
+                    {
+                        document.querySelector('#dice_throw').disabled = true;
+                    }
+                    else 
+                    {
+                        document.querySelector('#dice_throw').disabled = false;
+                    }
+                }
+                else if (data.type == "game_message")
+                {
+                    setCnvText(data.dices, 150, 150)
+                }
             };
 
             chatSocket.onclose = function(e) {
@@ -82,9 +106,17 @@
                 const messageInputDom = document.querySelector('#chat-message-input');
                 const message = "["+username+"]"+messageInputDom.value;
                 chatSocket.send(JSON.stringify({
-                    'message': message
+                    'message': message,
+                    'type': 'chat_message'
                 }));
                 messageInputDom.value = '';
+            };
+
+            document.querySelector('#dice_throw').onclick = function(e){   
+                chatSocket.send(JSON.stringify({
+                    'message': 'throw_dices',
+                    'type': 'game_message'
+                }));
             };
         </script>
     </div>
