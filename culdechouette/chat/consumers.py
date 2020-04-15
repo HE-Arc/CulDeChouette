@@ -3,6 +3,12 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from random import randrange
 from django.contrib.auth.models import User
 
+class GameUser():
+    def __init__(self, name, score):
+        self.name = name
+        self.score = score
+    
+
 class ChatConsumer(AsyncWebsocketConsumer):
     
     async def connect(self):
@@ -34,7 +40,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if self.room_name not in ChatConsumer.dices:
             ChatConsumer.dices[self.room_name] = []    
 
-        ChatConsumer.users[self.room_name].append(str(self.scope['user']))
+        ChatConsumer.users[self.room_name].append(GameUser(str(self.scope['user']), 0))
 
         await self.update()
 
@@ -45,8 +51,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-        ChatConsumer.users[self.room_name].remove(str(self.scope['user']))
+        users = ChatConsumer.users[self.room_name]
 
+        [users.pop(i) for i in range(len(users)) if users[i].name == str(self.scope['user'])]
+
+        ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name])
+        
         await self.update()
 
     async def update(self):
@@ -54,8 +64,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'config_message',
-                'message': json.dumps(ChatConsumer.users[self.room_name]),
-                'active_player': ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]]
+                'message': json.dumps([user.name for user in ChatConsumer.users[self.room_name]]),
+                'active_player': ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].name
             }
         )   
 
@@ -114,4 +124,5 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'message': message,
             'active_player': active_player
         }))
+
 
