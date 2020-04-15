@@ -29,8 +29,8 @@
         </div>
         <h4 id="active_player">Lel's turn</h4> <!--TODO : Add current player's name in lieu of Lel-->
         <div id="dice_display" ></div>
-        <button>Grelotte ça picote !</button>
-        <button>Pas mou le caillou !</button>
+        <input type="button" value="Grelotte ça picote !" id="grelotte">
+        <input type="button" value="Pas mou le caillou !" id="caillou">
         <input type="button" value="Throw dices" id="dice_throw">
 
         <script>
@@ -87,8 +87,8 @@
                 }
                 else if(data.type == "config_message")
                 {
+                    console.log(data.message);
                     scoreData = JSON.parse(data.message);
-                    console.log(scoreData);
                     scoreboard = ""
                     for (let i = 0; i < scoreData.length; i++)
                     {
@@ -138,6 +138,20 @@
             document.querySelector('#dice_throw').onclick = function(e){   
                 chatSocket.send(JSON.stringify({
                     'message': 'throw_dices',
+                    'type': 'game_message'
+                }));
+            };
+
+            document.querySelector('#caillou').onclick = function(e){   
+                chatSocket.send(JSON.stringify({
+                    'message': 'caillou',
+                    'type': 'game_message'
+                }));
+            };
+
+            document.querySelector('#grelotte').onclick = function(e){   
+                chatSocket.send(JSON.stringify({
+                    'message': 'grelotte',
                     'type': 'game_message'
                 }));
             };
