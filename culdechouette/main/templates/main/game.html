@@ -87,7 +87,15 @@
                 }
                 else if(data.type == "config_message")
                 {
-                    document.querySelector('#score').textContent = data.message;
+                    scoreData = JSON.parse(data.message);
+                    console.log(scoreData);
+                    scoreboard = ""
+                    for (let i = 0; i < scoreData.length; i++)
+                    {
+                        scoreboard += `${scoreData[i].name}: ${scoreData[i].score}<br>`
+                    }
+                    document.querySelector('#score').innerHTML = scoreboard;
+
                     document.querySelector('#active_player').textContent = data.active_player + "'s turn";
                     
                     if(data.active_player != username)

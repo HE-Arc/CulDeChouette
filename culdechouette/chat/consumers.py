@@ -3,10 +3,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from random import randrange
 from django.contrib.auth.models import User
 
-class GameUser():
+class GameUser(dict):
     def __init__(self, name, score):
         self.name = name
         self.score = score
+        dict.__init__(self, name=name, score=score)
     
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -64,7 +65,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'config_message',
-                'message': json.dumps([user.name for user in ChatConsumer.users[self.room_name]]),
+                'message': json.dumps([user for user in ChatConsumer.users[self.room_name]]),
                 'active_player': ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].name
             }
         )   
