@@ -2,6 +2,36 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from random import randrange
 from django.contrib.auth.models import User
+#from gamecontroller import GameController
+
+class GameController():
+
+    def evaluateThrow(diceList):
+
+        diceList.sort()
+        d1 = diceList[0]
+        d2 = diceList[1]
+        d3 = diceList[2]
+
+        diceSum = sum(diceList)
+        if d1 == d2 == d3:
+            # Cul de chouette
+            print("Cul de chouette")
+        elif d1 == d2 or d1 == d3 or d2 == d3:
+            
+            if max(diceList)*2 == diceSum:
+                # Chouette velute
+                print("Chouette velute")
+            else : 
+                #chouette
+                print("chouette")
+        elif d1 + d2 == d3:
+            # velutte
+            print("velutte")
+        elif d1+1 == d2 and d1+2 == d3:
+            # suite
+            print("suite")
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     
@@ -95,6 +125,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         if ChatConsumer.dices[self.room_name] == []:
             ChatConsumer.dices[self.room_name] = [randrange(1,6), randrange(1,6), randrange(1,6)]
+            GameController.evaluateThrow(ChatConsumer.dices[self.room_name])
 
         # Send message to WebSocket
         await self.send(text_data=json.dumps({
