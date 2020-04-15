@@ -12,25 +12,33 @@ class GameController():
         d1 = diceList[0]
         d2 = diceList[1]
         d3 = diceList[2]
-
+        score =0
         diceSum = sum(diceList)
         if d1 == d2 == d3:
             # Cul de chouette
             print("Cul de chouette")
+            score = 40 + 10*d1
         elif d1 == d2 or d1 == d3 or d2 == d3:
             
             if max(diceList)*2 == diceSum:
-                # Chouette velute
+                # Chouette velute -> pas mou le caillou
                 print("Chouette velute")
+                score = 2*d3*d3
             else : 
                 #chouette
                 print("chouette")
+                score = d2*d2
         elif d1 + d2 == d3:
             # velutte
             print("velutte")
+            score = 2*d3*d3
         elif d1+1 == d2 and d1+2 == d3:
-            # suite
+            # suite -> Grelote ça picote
             print("suite")
+            score = -10
+        else:
+            print("néant")
+        return score
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
