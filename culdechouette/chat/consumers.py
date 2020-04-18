@@ -87,6 +87,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ChatConsumer.grelotte = {}
         if not hasattr(ChatConsumer, 'change'):
             ChatConsumer.change = {}
+        if not hasattr(ChatConsumer, 'flag'):
+            ChatConsumer.flag = {}
 
 
         if self.room_name not in ChatConsumer.active_player:
@@ -99,10 +101,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ChatConsumer.dices[self.room_name] = []    
 
         if self.room_name not in ChatConsumer.caillou:
-            ChatConsumer.caillou[self.room_name] = 0    
+            ChatConsumer.caillou[self.room_name] = 0
+
+        if self.room_name not in ChatConsumer.grelotte:
+            ChatConsumer.grelotte[self.room_name] = set()
+        
+        if self.room_name not in ChatConsumer.flag:
+            ChatConsumer.flag[self.room_name] = "dices"
 
         if self.room_name not in ChatConsumer.change:
-            ChatConsumer.change[self.room_name] = True    
+            ChatConsumer.change[self.room_name] = False    
 
         ChatConsumer.users[self.room_name].append(GameUser(str(self.scope['user']), 0))
 
@@ -139,6 +147,49 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = text_data_json['message']
         type = text_data_json['type']
 
+        if type == "game_message" :
+            if message == "throw_dices" and ChatConsumer.flag[self.room_name] == "dices":
+                ChatConsumer.dices[self.room_name] = [randrange(1,6), randrange(1,6), randrange(1,6)]
+                
+                score, flag = GameController.evaluateThrow(ChatConsumer.dices[self.room_name])
+                if flag != 2 and flag != 5:                    
+                    ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].score += score
+                    ChatConsumer.change[self.room_name] = True
+                elif flag == 2:
+                    ChatConsumer.caillou[self.room_name] = score
+                    ChatConsumer.flag[self.room_name] = "caillou"
+                else:
+                    ChatConsumer.flag[self.room_name] = "grelotte"
+            else:
+                if message == "caillou" and ChatConsumer.flag[self.room_name] == "caillou":
+                    if ChatConsumer.caillou[self.room_name] > 0:
+                        for user in ChatConsumer.users[self.room_name]:
+                            if user.name == str(self.scope['user']):
+                                user.score += ChatConsumer.caillou[self.room_name]
+
+                        ChatConsumer.caillou[self.room_name] = 0
+                        ChatConsumer.change[self.room_name] = True
+                        ChatConsumer.flag[self.room_name] = "dices"
+
+                if message == "grelotte" and ChatConsumer.flag[self.room_name] == "grelotte":
+                    ChatConsumer.grelotte[self.room_name].add(self.scope['user'])
+                    if len(ChatConsumer.grelotte[self.room_name]) == len(ChatConsumer.users[self.room_name]):
+                        for user in ChatConsumer.users[self.room_name]:
+                            if user.name == str(self.scope['user']):
+                                user.score -= 10 # TODO : CONST VALUE
+
+                        ChatConsumer.grelotte[self.room_name] = set()
+                        ChatConsumer.change[self.room_name] = True
+                        ChatConsumer.flag[self.room_name] = "dices"
+
+            # General game status    
+            if ChatConsumer.change[self.room_name]:
+                ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name])
+                ChatConsumer.change[self.room_name] = False
+            for user in ChatConsumer.users[self.room_name]:
+                if user.score >= 343:
+                    print("WIN")
+                    # TODO : deal with end of game
 
         # Send message to room group
         await self.channel_layer.group_send(
@@ -149,12 +200,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        if ChatConsumer.change[self.room_name]: ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name])
-
-        ChatConsumer.dices[self.room_name] = []
-
-        print(ChatConsumer.change[self.room_name])    
         await self.update()
+
 
     # Receive message from room group
     async def chat_message(self, event):
@@ -169,32 +216,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from room group
     async def game_message(self, event):
         message = event['message']
-        if message == "throw_dices" and ChatConsumer.change[self.room_name]:
-            if ChatConsumer.dices[self.room_name] == []:
-                ChatConsumer.dices[self.room_name] =  [2,2,4]#[randrange(1,6), randrange(1,6), randrange(1,6)]
-                
-                score, flag = GameController.evaluateThrow(ChatConsumer.dices[self.room_name])
-                if flag != 2 and flag != 5:                    
-                    ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].score += score
-                elif flag == 2:
-                    ChatConsumer.change[self.room_name] = False
-                    ChatConsumer.caillou[self.room_name] = score
-            # Send message to WebSocket
+
+       # Send message to WebSocket
+        if message == "throw_dices":
             await self.send(text_data=json.dumps({
                 'type' : "game_message",
-                'message': "throw_dices",
+                'message': message,
                 'dices': ChatConsumer.dices[self.room_name]
             }))
         else:
-            if message == "caillou":
-                if ChatConsumer.caillou[self.room_name] > 0:
-                    for user in ChatConsumer.users[self.room_name]:
-                        if user.name == str(self.scope['user']):
-                            user.score += ChatConsumer.caillou[self.room_name]
-                    ChatConsumer.caillou[self.room_name] = 0
-                    ChatConsumer.change[self.room_name] = True
-            if message == "grelotte":
-                pass
+            await self.send(text_data=json.dumps({
+                'type' : "game_message",
+                'message': message
+            }))
 
 
   
