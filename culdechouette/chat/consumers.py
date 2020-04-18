@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 class GameController():
 
-    def evaluateThrow(diceList):
+    def evaluateThrow(self, diceList):
 
         diceList.sort()
         d1 = diceList[0]
@@ -147,14 +147,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = text_data_json['message']
         type = text_data_json['type']
 
+        log = ""
+
         if type == "game_message" :
             if message == "throw_dices" and ChatConsumer.flag[self.room_name] == "dices":
-                ChatConsumer.dices[self.room_name] = [randrange(1,6), randrange(1,6), randrange(1,6)]
-                
+                ChatConsumer.dices[self.room_name] = [2,2,4]#[randrange(1,6), randrange(1,6), randrange(1,6)]
+
+                log += f"{str(self.scope['user'])} rolled {ChatConsumer.dices[self.room_name]}\n"
+
                 score, flag = GameController.evaluateThrow(ChatConsumer.dices[self.room_name])
                 if flag != 2 and flag != 5:                    
                     ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].score += score
                     ChatConsumer.change[self.room_name] = True
+                    log += f"{str(self.scope['user'])} gained {score} points\n"
                 elif flag == 2:
                     ChatConsumer.caillou[self.room_name] = score
                     ChatConsumer.flag[self.room_name] = "caillou"
@@ -166,6 +171,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         for user in ChatConsumer.users[self.room_name]:
                             if user.name == str(self.scope['user']):
                                 user.score += ChatConsumer.caillou[self.room_name]
+                                log += f"{user.name} was first and gained {ChatConsumer.caillou[self.room_name]} points\n"
 
                         ChatConsumer.caillou[self.room_name] = 0
                         ChatConsumer.change[self.room_name] = True
@@ -177,6 +183,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         for user in ChatConsumer.users[self.room_name]:
                             if user.name == str(self.scope['user']):
                                 user.score -= 10 # TODO : CONST VALUE
+                                log += f"{user.name} was last and lost 10 points\n"
 
                         ChatConsumer.grelotte[self.room_name] = set()
                         ChatConsumer.change[self.room_name] = True
@@ -188,18 +195,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 ChatConsumer.change[self.room_name] = False
             for user in ChatConsumer.users[self.room_name]:
                 if user.score >= 343:
-                    print("WIN")
+                    log += f"{user.name} won !\n"
                     # TODO : deal with end of game
 
+        
         # Send message to room group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
                 'type': type,
-                'message': message
+                'message': message,
+                'log' : log
             }
         )
-
+        
         await self.update()
 
 
@@ -216,22 +225,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
     # Receive message from room group
     async def game_message(self, event):
         message = event['message']
-
+        log = event['log']
        # Send message to WebSocket
         if message == "throw_dices":
             await self.send(text_data=json.dumps({
                 'type' : "game_message",
                 'message': message,
-                'dices': ChatConsumer.dices[self.room_name]
+                'dices': ChatConsumer.dices[self.room_name],
+                'log' : log
             }))
         else:
             await self.send(text_data=json.dumps({
                 'type' : "game_message",
-                'message': message
+                'message': message,
+                'log' : log
             }))
 
-
-  
     async def config_message(self, event):
         message = event['message']
         active_player = event['active_player']
@@ -240,7 +249,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type' : "config_message",
             'message': message,
-            'active_player': active_player
+            'active_player': active_player,
         }))
 
 

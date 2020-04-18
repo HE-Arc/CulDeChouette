@@ -109,8 +109,8 @@
                 }
                 else if (data.type == "game_message")
                 {
-                    //setCnvText(data.dices, 150, 150)
-                    rollDiceWithValues(data.dices);
+                    document.querySelector('#chat-log').value += (data.log + '\n');
+                    if (data.message == "throw_dices") rollDiceWithValues(data.dices);
                 }
             };
 
