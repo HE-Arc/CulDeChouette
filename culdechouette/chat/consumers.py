@@ -5,9 +5,12 @@ from random import randrange
 from django.contrib.auth.models import User
 #from gamecontroller import GameController
 
+
+from main.models import Play
+from main.models import Game
 class GameController():
 
-    def evaluateThrow(self, diceList):
+    def evaluateThrow(diceList):
 
         diceList.sort()
         d1 = diceList[0]
@@ -50,6 +53,16 @@ class GameController():
             flag = -1
         return score, flag
 
+
+    def endOfGame(winner,players,room_name):
+        for player in players:
+            game = Game.objects.get(id=room_name)
+            winner = User.objects.get(username=winner.name)
+            game.winner = winner
+            game.save()
+            p = Play(IDGame=game,IDPlayers=User.objects.get(username=player.name),score=player.score)
+            p.save()
+            
 
 class GameUser():
     def __init__(self, name, score):
@@ -151,10 +164,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         if type == "game_message" :
             if message == "throw_dices" and ChatConsumer.flag[self.room_name] == "dices":
-                ChatConsumer.dices[self.room_name] = [2,2,4]#[randrange(1,6), randrange(1,6), randrange(1,6)]
+                ChatConsumer.dices[self.room_name] = [randrange(1,6), randrange(1,6), randrange(1,6)]
 
                 log += f"{str(self.scope['user'])} rolled {ChatConsumer.dices[self.room_name]}\n"
-
+                print(ChatConsumer.dices[self.room_name])
                 score, flag = GameController.evaluateThrow(ChatConsumer.dices[self.room_name])
                 if flag != 2 and flag != 5:                    
                     ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].score += score
@@ -194,8 +207,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name])
                 ChatConsumer.change[self.room_name] = False
             for user in ChatConsumer.users[self.room_name]:
-                if user.score >= 343:
+                if user.score >= 12:
                     log += f"{user.name} won !\n"
+                    #GameController.endOfGame(user,ChatConsumer.users[self.room_name],self.room_name)
                     # TODO : deal with end of game
 
         
