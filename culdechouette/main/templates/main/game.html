@@ -1,25 +1,7 @@
 {% extends "main/base.html" %}
 {% block content %}
-
-<style>
-#container {
-    display: flex;
-}
-
-#game_table {
-    padding-right: 50px;
-}
-
-#chat-log, #chat-message-input {
-    width:400px;
-}
-
-#dice_display {
-  height: 200px;
-  width: 800px;
-  border: 1px black dashed;
-}
-</style>
+{% load static %}
+<link rel="stylesheet" href="{% static "culdechouette/game.css" %}">
 <script type="text/javascript" src="https://unpkg.com/roll-a-die@1.3.0/dist/roll-a-die.js"></script>
 <div id="container">
     <div id="game_table">
@@ -57,7 +39,7 @@
 
     <div id="chat">
         {% comment %} <h4 id="connectionName"></h4> {% endcomment %}
-        <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+        <div id="chat-log" height="50hv" rows="20wv"></div><br>
         <input id="chat-message-input" type="text" size="100"><br>
         <input id="chat-message-submit" type="button" value="Send">
         {{ room_name|json_script:"room-name" }}
@@ -83,7 +65,10 @@
             chatSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
                 if(data.type == "chat_message"){
-                    document.querySelector('#chat-log').value += (data.message + '\n');
+                    message = document.createElement('p');
+                    message.textContent = data.message;
+                    message.class = "message";
+                    document.querySelector('#chat-log').appendChild(message);
                 }
                 else if(data.type == "config_message")
                 {
@@ -109,7 +94,11 @@
                 }
                 else if (data.type == "game_message")
                 {
-                    document.querySelector('#chat-log').value += (data.log + '\n');
+                    log = document.createElement('p');
+                    log.textContent = data.log;
+                    console.log(data.log);
+                    log.class = "log";
+                    document.querySelector('#chat-log').appendChild(log);
                     if (data.message == "throw_dices") rollDiceWithValues(data.dices);
                 }
             };

@@ -1,0 +1,18 @@
+#container {
+    display: flex;
+}
+
+#game_table {
+    padding-right: 50px;
+}
+
+#chat-log,
+#chat-message-input {
+    width: 400px;
+}
+
+#dice_display {
+    height: 200px;
+    width: 800px;
+    border: 1px black dashed;
+}

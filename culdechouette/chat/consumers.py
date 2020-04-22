@@ -138,9 +138,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         users = ChatConsumer.users[self.room_name]
 
-        [users.pop(i) for i in range(len(users)) if users[i].name == str(self.scope['user'])]
+        [users.pop(i) for i in range(len(users)) if users[i].name == str(self.scope['user'])] # TODO : change this to not eat itself while looping
 
-        ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name])
+        ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name]) # TODO : check if user list is empty before
         
         await self.update()
 
