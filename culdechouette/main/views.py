@@ -14,7 +14,7 @@ class HomeView(generic.TemplateView):
     template_name = 'main/home.html'
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['games'] = Game.objects.all()
+        context['games'] = Game.objects.all().order_by('-isActive')
         return context
 
 class CreateView(CreateView):

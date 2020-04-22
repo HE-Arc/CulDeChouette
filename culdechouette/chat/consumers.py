@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 
 from main.models import Play
 from main.models import Game
+from channels.db import database_sync_to_async
 class GameController():
 
     def evaluateThrow(diceList):
@@ -53,14 +54,15 @@ class GameController():
             flag = -1
         return score, flag
 
-
-    def endOfGame(winner,players,room_name):
+    @database_sync_to_async
+    def endOfGame(self,winner,players,room_name):
         for player in players:
             game = Game.objects.get(id=room_name)
             winner = User.objects.get(username=winner.name)
             game.winner = winner
+            game.isActive = False
             game.save()
-            p = Play(IDGame=game,IDPlayers=User.objects.get(username=player.name),score=player.score)
+            p = Play(IDGame=game,IDPlayer=User.objects.get(username=player.name),score=player.score)
             p.save()
             
 
@@ -209,7 +211,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             for user in ChatConsumer.users[self.room_name]:
                 if user.score >= 12:
                     log += f"{user.name} won !\n"
-                    #GameController.endOfGame(user,ChatConsumer.users[self.room_name],self.room_name)
+                    await GameController.endOfGame(user,ChatConsumer.users[self.room_name],self.room_name)
                     # TODO : deal with end of game
 
         
