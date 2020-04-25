@@ -16,3 +16,24 @@
     width: 800px;
     border: 1px black dashed;
 }
+
+#chat-log {
+    height: 300px;
+    overflow: auto;
+}
+
+.log {
+    font-style: italic;
+    font-weight: bold;
+    color: #525050;
+}
+
+.message,
+.log {
+    margin-bottom: 2px;
+}
+
+.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+}

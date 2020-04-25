@@ -20,7 +20,8 @@ class GameUserEncoder(JSONEncoder):
     
 
 class ChatConsumer(AsyncWebsocketConsumer):
-    
+    PENALTY = 10
+
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.room_group_name = 'chat_%s' % self.room_name
@@ -98,6 +99,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'active_player': ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].name
             }
         )   
+        if not await GameController.getStatus(self.room_name):
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'game_message', 
+                    'message': "end_game",
+                    'log' : ''
+                }
+            )
+        
 
     # Receive message from WebSocket
     async def receive(self, text_data):
@@ -107,12 +118,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         log = ""
 
-        if type == "game_message" :
+        if type == "game_message" and await GameController.getStatus(self.room_name):
+            
             if message == "throw_dices" and ChatConsumer.flag[self.room_name] == "dices":
                 ChatConsumer.dices[self.room_name] = [randrange(1,6), randrange(1,6), randrange(1,6)]
 
                 log += f"{str(self.scope['user'])} rolled {ChatConsumer.dices[self.room_name]}\n"
-                print(ChatConsumer.dices[self.room_name])
                 score, flag = GameController.evaluateThrow(ChatConsumer.dices[self.room_name])
                 if flag != 2 and flag != 5:                    
                     ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].score += score
@@ -123,29 +134,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     ChatConsumer.flag[self.room_name] = "caillou"
                 else:
                     ChatConsumer.flag[self.room_name] = "grelotte"
+            elif message == "caillou" and ChatConsumer.flag[self.room_name] == "caillou":
+                if ChatConsumer.caillou[self.room_name] > 0:
+                    for user in ChatConsumer.users[self.room_name]:
+                        if user.name == str(self.scope['user']):
+                            user.score += ChatConsumer.caillou[self.room_name]
+                            log += f"{user.name} was first and gained {ChatConsumer.caillou[self.room_name]} points\n"
+
+                    ChatConsumer.caillou[self.room_name] = 0
+                    ChatConsumer.change[self.room_name] = True
+                    ChatConsumer.flag[self.room_name] = "dices"
+
+            elif message == "grelotte" and ChatConsumer.flag[self.room_name] == "grelotte":
+                ChatConsumer.grelotte[self.room_name].add(str(self.scope['user']))
+                if len(ChatConsumer.grelotte[self.room_name]) == len(ChatConsumer.users[self.room_name]) -1:
+                    for user in ChatConsumer.users[self.room_name]:
+                        if user.name not in ChatConsumer.grelotte[self.room_name]:
+                            user.score -= self.PENALTY
+                            log += f"{user.name} was last and lost 10 points"                            
+
+                    ChatConsumer.grelotte[self.room_name] = set()
+                    ChatConsumer.change[self.room_name] = True
+                    ChatConsumer.flag[self.room_name] = "dices"
             else:
-                if message == "caillou" and ChatConsumer.flag[self.room_name] == "caillou":
-                    if ChatConsumer.caillou[self.room_name] > 0:
-                        for user in ChatConsumer.users[self.room_name]:
-                            if user.name == str(self.scope['user']):
-                                user.score += ChatConsumer.caillou[self.room_name]
-                                log += f"{user.name} was first and gained {ChatConsumer.caillou[self.room_name]} points\n"
-
-                        ChatConsumer.caillou[self.room_name] = 0
-                        ChatConsumer.change[self.room_name] = True
-                        ChatConsumer.flag[self.room_name] = "dices"
-
-                if message == "grelotte" and ChatConsumer.flag[self.room_name] == "grelotte":
-                    ChatConsumer.grelotte[self.room_name].add(self.scope['user'])
-                    if len(ChatConsumer.grelotte[self.room_name]) == len(ChatConsumer.users[self.room_name]):
-                        for user in ChatConsumer.users[self.room_name]:
-                            if user.name == str(self.scope['user']):
-                                user.score -= 10 # TODO : CONST VALUE
-                                log += f"{user.name} was last and lost 10 points\n"
-
-                        ChatConsumer.grelotte[self.room_name] = set()
-                        ChatConsumer.change[self.room_name] = True
-                        ChatConsumer.flag[self.room_name] = "dices"
+                if (message == "grelotte" and ChatConsumer.flag[self.room_name] == "caillou") or (message == "caillou" and ChatConsumer.flag[self.room_name] == "grelotte"):
+                    for user in ChatConsumer.users[self.room_name]:
+                        if user.name == str(self.scope['user']):
+                            user.score -= 10
+                            log += f"{user.name} made a mistake that cost 10 points !\n"
 
             # General game status    
             if ChatConsumer.change[self.room_name]:
@@ -155,7 +171,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 if user.score >= 12:
                     log += f"{user.name} won !\n"
                     await GameController.endOfGame(user,ChatConsumer.users[self.room_name],self.room_name)
-                    # TODO : deal with end of game
 
         
         # Send message to room group
@@ -193,6 +208,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'dices': ChatConsumer.dices[self.room_name],
                 'log' : log
             }))
+        elif message == "end_game":
+            await self.send(text_data=json.dumps({
+                    'type' : "game_message",
+                    'message': message,
+                }))
         else:
             await self.send(text_data=json.dumps({
                 'type' : "game_message",

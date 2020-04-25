@@ -53,11 +53,17 @@ class GameController():
 
     @database_sync_to_async
     def endOfGame(self,winner,players,room_name):
-        for player in players:
-            game = Game.objects.get(id=room_name)
-            winner = User.objects.get(username=winner.name)
-            game.winner = winner
-            game.isActive = False
-            game.save()
+        game = Game.objects.get(id=room_name)
+        winner = User.objects.get(username=winner.name)
+        game.winner = winner
+        game.isActive = False
+        game.save()
+        for player in players:            
             p = Play(IDGame=game,IDPlayer=User.objects.get(username=player.name),score=player.score)
             p.save()
+
+    @database_sync_to_async
+    def getStatus(self, room_name):
+        game = Game.objects.get(id=room_name)
+        return game.isActive
+
