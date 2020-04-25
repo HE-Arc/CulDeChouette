@@ -4,7 +4,8 @@ from django.contrib import messages
 from django.views import View
 from django.contrib.auth.models import User
 
-
+from main.models import Play
+from main.models import Game
 
 
 class Register(View):
@@ -23,4 +24,6 @@ class Register(View):
 
 class ProfileView(View):
     def get(self,request):
-        return render(request,'users/profile.html',{})
+        current_user = request.user
+        plays = Play.objects.select_related('IDGame').filter(IDPlayer=current_user)
+        return render(request,'users/profile.html',{'user':current_user,'plays':plays})
