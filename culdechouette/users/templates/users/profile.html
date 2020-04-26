@@ -27,7 +27,15 @@
             </tr>
         </table>
         <h4>Results</h4>
-        <p>#TODO</p>
+        {% for play in plays %}
+            <div class="border rounded mt-5 p-2">
+
+            <h2 class="">{{ play.IDGame.name }}</h2>
+            <p>{{ play.IDGame.date|date:"d.m.Y" }}</p>
+            <p>Winner : {{ play.IDGame.winner }}</p>
+            <p>Your score : {{ play.score }}</p>
+        </div>
+      {% endfor %}
     </div>
     </div>
 </div>
