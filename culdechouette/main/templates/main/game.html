@@ -1,7 +1,7 @@
 {% extends "main/base.html" %}
 {% block content %}
 {% load static %}
-<link rel="stylesheet" href="{% static "culdechouette/game.css" %}">
+<link rel="stylesheet" type="text/css" href="{% static "culdechouette/game.css" %}">
 <script type="text/javascript" src="https://unpkg.com/roll-a-die@1.3.0/dist/roll-a-die.js"></script>
 <div id="container">
     <div id="game_table">
@@ -53,8 +53,13 @@
             const id = user.pk
             {% comment %} document.querySelector('#connectionName').textContent ="Connected as "+username; {% endcomment %}
             
+            var wsStart = 'ws://';
+            if (window.location.protocol == 'https:') {
+                wsStart = 'wss://'
+            }
+
             const chatSocket = new WebSocket(
-                'ws://'
+                wsStart
                 + window.location.host
                 + '/ws/chat/'
                 + roomName
