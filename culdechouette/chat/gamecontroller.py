@@ -33,14 +33,14 @@ class GameController():
                 #chouette
                 score = d2*d2
                 flag = 3
-        elif d1 + d2 == d3:
-            # velutte
-            score = 2*d3*d3
-            flag = 4
         elif d1+1 == d2 and d1+2 == d3:
             # suite -> Grelote ça picote
             score = -10
             flag = 5
+        elif d1 + d2 == d3:
+            # velutte
+            score = 2*d3*d3
+            flag = 4
         else:
             flag = -1
         return score, flag
