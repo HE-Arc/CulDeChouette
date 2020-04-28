@@ -1,7 +1,7 @@
 {% extends "main/base.html" %}
 {% block content %}
 {% load static %}
-<link rel="stylesheet" href="{% static "culdechouette/game.css" %}">
+<link rel="stylesheet" type="text/css" href="{% static "culdechouette/game.css" %}">
 <script type="text/javascript" src="https://unpkg.com/roll-a-die@1.3.0/dist/roll-a-die.js"></script>
 <div id="container">
     <div id="game_table">
@@ -42,19 +42,24 @@
         <input id="chat-message-input" type="text" size="100"><br>
         <input id="chat-message-submit" type="button" value="Send">
         {{ room_name|json_script:"room-name" }}
-        {{ user |json_script:"user" }}
+        {{ gameUser |json_script:"gameUser" }}
         {{ users |json_script:"users"}}
 
         <script>
             const roomName = JSON.parse(document.getElementById('room-name').textContent);
-            user = JSON.parse(document.getElementById('user').textContent);
+            user = JSON.parse(document.getElementById('gameUser').textContent);
             user = JSON.parse(user);
             const username = user.fields.username;
             const id = user.pk
             {% comment %} document.querySelector('#connectionName').textContent ="Connected as "+username; {% endcomment %}
             
+            var wsStart = 'ws://';
+            if (window.location.protocol == 'https:') {
+                wsStart = 'wss://'
+            }
+
             const chatSocket = new WebSocket(
-                'ws://'
+                wsStart
                 + window.location.host
                 + '/ws/chat/'
                 + roomName

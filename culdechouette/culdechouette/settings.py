@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'me7@ryo+hez+v1rc^d048(bjj-04sagzmi0rx45d2yt*cz+utf'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["127.0.0.1","localhost","culdechouette.srvz-webapp.he-arc.ch"]
+ALLOWED_HOSTS = ["127.0.0.1","localhost", "culdechouette.srvz-webapp.he-arc.ch"]
 
 
 # Application definition
@@ -137,6 +137,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
+
+STATIC_ROOT = '/var/www/static'
 
 STATIC_URL = '/static/'
 

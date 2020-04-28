@@ -37,6 +37,6 @@ class GameView(generic.TemplateView):
         struct = json.loads(user)
         user = json.dumps(struct[0])
         return render(request, 'main/game.html', {
-            'room_name': room_name,'user':user
+            'room_name': room_name,'gameUser':user
         })
     

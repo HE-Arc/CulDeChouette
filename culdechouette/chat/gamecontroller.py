@@ -21,33 +21,27 @@ class GameController():
 
         if d1 == d2 == d3:
             # Cul de chouette
-            print("Cul de chouette")
             score = 40 + 10*d1
             flag = 1
         elif d1 == d2 or d1 == d3 or d2 == d3:
             
             if max(diceList)*2 == diceSum:
                 # Chouette velute -> pas mou le caillou
-                print("Chouette velute")
                 score = 2*d3*d3
                 flag = 2
             else : 
                 #chouette
-                print("chouette")
                 score = d2*d2
                 flag = 3
-        elif d1 + d2 == d3:
-            # velutte
-            print("velutte")
-            score = 2*d3*d3
-            flag = 4
         elif d1+1 == d2 and d1+2 == d3:
             # suite -> Grelote ça picote
-            print("suite")
             score = -10
             flag = 5
+        elif d1 + d2 == d3:
+            # velutte
+            score = 2*d3*d3
+            flag = 4
         else:
-            print("néant")
             flag = -1
         return score, flag
 
