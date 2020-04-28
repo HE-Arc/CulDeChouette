@@ -21,6 +21,7 @@ class GameUserEncoder(JSONEncoder):
 
 class ChatConsumer(AsyncWebsocketConsumer):
     PENALTY = 10
+    WIN_SCORE = 343
 
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_name']
@@ -167,7 +168,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 if (message == "grelotte" and ChatConsumer.flag[self.room_name] == "caillou") or (message == "caillou" and ChatConsumer.flag[self.room_name] == "grelotte"):
                     for user in ChatConsumer.users[self.room_name]:
                         if user.name == str(self.scope['user']):
-                            user.score -= 10
+                            user.score -= self.PENALTY
                             log += f"{user.name} made a mistake that cost 10 points !\n"
 
             # General game status    
@@ -175,7 +176,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name])
                 ChatConsumer.change[self.room_name] = False
             for user in ChatConsumer.users[self.room_name]:
-                if user.score >= 12:
+                if user.score >= self.WIN_SCORE:
                     log += f"{user.name} won !\n"
                     await GameController.endOfGame(user,ChatConsumer.users[self.room_name],self.room_name)
 
