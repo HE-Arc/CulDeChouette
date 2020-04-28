@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'me7@ryo+hez+v1rc^d048(bjj-04sagzmi0rx45d2yt*cz+utf'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["127.0.0.1","localhost"]
+ALLOWED_HOSTS = ["127.0.0.1","localhost", "culdechouette.srvz-webapp.he-arc.ch"]
 
 
 # Application definition
