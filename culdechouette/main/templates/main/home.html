@@ -7,12 +7,11 @@
 }
 </style>
 <div>
-  {% if games %}
-
   <div>
     <a href="{% url 'create' %}">Create new Game</a>
   </div>
 
+  {% if games %}
     {% for game in games %}
       {% if game.isActive %}
         <div class="border rounded mt-5 p-2">
