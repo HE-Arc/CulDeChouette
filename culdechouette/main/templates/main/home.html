@@ -1,6 +1,32 @@
 {% extends "main/base.html" %}
 {% block content %}
+<style>
+  .disabled {
+    pointer-events: none;
+    opacity: 0.4;
+}
+</style>
 <div>
-  Hellooo guys !
+  <div>
+    <a href="{% url 'create' %}">Create new Game</a>
+  </div>
+
+  {% if games %}
+    {% for game in games %}
+      {% if game.isActive %}
+        <div class="border rounded mt-5 p-2">
+      {% else %}
+        <div class="border rounded mt-5 p-2 disabled">
+      {% endif %}
+      <h2 class="">{{ game.name }}</h2>
+      <p>{{ game.date|date:"d.m.Y" }}</p>
+      <a class="btn btn-outline-info" href="{% url 'game' room_name=game.id.hex %}">Join</a>
+      </div>
+    {% endfor %}
+  {% else %}
+
+  <h1>There are currently no games</h1>
+  {% endif %}
+
 </div>
 {% endblock content %}

@@ -1,0 +1,164 @@
+{% extends "main/base.html" %}
+{% block content %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static "culdechouette/game.css" %}">
+<script type="text/javascript" src="https://unpkg.com/roll-a-die@1.3.0/dist/roll-a-die.js"></script>
+<div id="container">
+    <div id="game_table">
+        <div >
+            <p id="score">Scores</p>
+            <!--TODO : Add dynamic scores of actives players-->
+        </div>
+        <h4 id="active_player">Lel's turn</h4> <!--TODO : Add current player's name in lieu of Lel-->
+        <div id="dice_display" ></div>
+        <input type="button" value="Grelotte ça picote !" id="grelotte">
+        <input type="button" value="Pas mou le caillou !" id="caillou">
+        <input type="button" value="Throw dices" id="dice_throw">
+
+        <script>
+            function response(res) {
+            // returns an array of the values from the dice
+            }
+            function rollDiceWithValues(dices) {
+                const element = document.getElementById('dice_display');
+                const numberOfDice = 3;
+                const valuesToThrow = String(dices).split(',').map(val => Number(val));
+                const options = {
+                    element, // element to display the animated dice in.
+                    numberOfDice, // number of dice to use 
+                    values: valuesToThrow, // values to throw. When provided, overides library generated values. Optional.
+                    callback: response,
+                    noSound: true,
+                    delay: 5000
+                }
+                rollADie(options);
+            }
+        </script>
+    </div>
+
+    <div id="chat">
+        {% comment %} <h4 id="connectionName"></h4> {% endcomment %}
+        <div id="chat-log" height="50hv" rows="20wv"></div><br>
+        <input id="chat-message-input" type="text" size="100"><br>
+        <input id="chat-message-submit" type="button" value="Send">
+        {{ room_name|json_script:"room-name" }}
+        {{ gameUser |json_script:"gameUser" }}
+        {{ users |json_script:"users"}}
+
+        <script>
+            const roomName = JSON.parse(document.getElementById('room-name').textContent);
+            user = JSON.parse(document.getElementById('gameUser').textContent);
+            user = JSON.parse(user);
+            const username = user.fields.username;
+            const id = user.pk
+            {% comment %} document.querySelector('#connectionName').textContent ="Connected as "+username; {% endcomment %}
+            
+            var wsStart = 'ws://';
+            if (window.location.protocol == 'https:') {
+                wsStart = 'wss://'
+            }
+
+            const chatSocket = new WebSocket(
+                wsStart
+                + window.location.host
+                + '/ws/chat/'
+                + roomName
+                + '/'
+            );
+
+            chatSocket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                if(data.type == "chat_message"){
+                    message = document.createElement('p');
+                    message.textContent = data.message;
+                    message.classList.add("message");
+                    let chat_log = document.querySelector('#chat-log')
+                    chat_log.appendChild(message);
+                    chat_log.scrollTop = chat_log.scrollHeight;
+                }
+                else if(data.type == "config_message")
+                {
+                    scoreData = JSON.parse(data.message);
+                    scoreboard = ""
+                    for (let i = 0; i < scoreData.length; i++)
+                    {
+                        scoreboard += `${scoreData[i].name}: ${scoreData[i].score}<br>`
+                    }
+                    document.querySelector('#score').innerHTML = scoreboard;
+
+                    document.querySelector('#active_player').textContent = data.active_player + "'s turn";
+                    
+                    if(data.active_player != username)
+                    {
+                        document.querySelector('#dice_throw').disabled = true;
+                    }
+                    else 
+                    {
+                        document.querySelector('#dice_throw').disabled = false;
+                    }
+                }
+                else if (data.type == "game_message")
+                {
+                    let chat_log = document.querySelector('#chat-log')
+                    for(l in data.log)
+                    {
+                        log = document.createElement('p');
+                        log.textContent = data.log[l];
+                        log.classList.add("log");
+                        chat_log.appendChild(log);
+                    }
+                    chat_log.scrollTop = chat_log.scrollHeight;
+                    if (data.message == "throw_dices") rollDiceWithValues(data.dices);
+                    if (data.message == "end_game") {
+                        document.querySelector('#caillou').classList.add("disabled")
+                        document.querySelector('#grelotte').classList.add("disabled")
+                        document.querySelector('#dice_throw').classList.add("disabled")
+                    }
+                }
+            };
+
+            chatSocket.onclose = function(e) {
+                console.error('Chat socket closed unexpectedly');
+            };
+
+            document.querySelector('#chat-message-input').focus();
+            document.querySelector('#chat-message-input').onkeyup = function(e) {
+                if (e.keyCode === 13) {  // enter, return
+                    document.querySelector('#chat-message-submit').click();
+                }
+            };
+
+            document.querySelector('#chat-message-submit').onclick = function(e) {
+                const messageInputDom = document.querySelector('#chat-message-input');
+                const message = "["+username+"] "+messageInputDom.value;
+                chatSocket.send(JSON.stringify({
+                    'message': message,
+                    'type': 'chat_message'
+                }));
+                messageInputDom.value = '';
+            };
+
+            document.querySelector('#dice_throw').onclick = function(e){   
+                chatSocket.send(JSON.stringify({
+                    'message': 'throw_dices',
+                    'type': 'game_message'
+                }));
+            };
+
+            document.querySelector('#caillou').onclick = function(e){   
+                chatSocket.send(JSON.stringify({
+                    'message': 'caillou',
+                    'type': 'game_message'
+                }));
+            };
+
+            document.querySelector('#grelotte').onclick = function(e){   
+                chatSocket.send(JSON.stringify({
+                    'message': 'grelotte',
+                    'type': 'game_message'
+                }));
+            };
+        </script>
+    </div>
+</div>
+{% endblock content %}

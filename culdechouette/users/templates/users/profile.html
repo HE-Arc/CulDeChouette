@@ -1,0 +1,30 @@
+{% extends "main/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="content-section">
+    <div>
+        <h3>{{ user.username }}'s profile</h3>
+    </div>
+    <div>
+        <h4>Informations</h4>
+
+        <table>
+            <tr>
+                <td>Username : </td>
+                <td> {{ user.username }}</td>
+            </tr>
+        </table>
+        <h4>Results</h4>
+        {% for play in plays %}
+            <div class="border rounded mt-5 p-2">
+
+            <h2 class="">{{ play.IDGame.name }}</h2>
+            <p>{{ play.IDGame.date|date:"d.m.Y" }}</p>
+            <p>Winner : {{ play.IDGame.winner }}</p>
+            <p>Your score : {{ play.score }}</p>
+        </div>
+      {% endfor %}
+    </div>
+    </div>
+</div>
+{% endblock content %}

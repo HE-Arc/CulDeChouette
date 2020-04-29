@@ -25,12 +25,14 @@ SECRET_KEY = 'me7@ryo+hez+v1rc^d048(bjj-04sagzmi0rx45d2yt*cz+utf'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1","localhost"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'chat',
     'users.apps.UsersConfig',
     'main.apps.MainConfig',
     'django.contrib.admin',
@@ -72,14 +74,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'culdechouette.wsgi.application'
 
+ASGI_APPLICATION = 'culdechouette.routing.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('GROUPNAME', 'cdc_db'),
+        'USER': os.environ.get('GROUPNAME', 'root'),
+        'PASSWORD': os.environ.get('PASSWORD', ''),
+        'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
+        'PORT': os.environ.get('MYSQL_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4'
+        }
     }
 }
 
@@ -120,8 +138,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
+STATIC_ROOT= os.path.join(BASE_DIR,'static/')
+
 STATIC_URL = '/static/'
 
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 LOGIN_REDIRECT_URL = 'home'
+
+LOGIN_URL = 'login'
