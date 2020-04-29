@@ -35,6 +35,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.accept()
 
+        # Add atribute to class if it doesnt exist. Replace a ctor
         if not hasattr(ChatConsumer, 'users'):
             ChatConsumer.users = {}
         if not hasattr(ChatConsumer, 'active_player'):
@@ -51,6 +52,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ChatConsumer.flag = {}
 
 
+        # Create the room specific objects
         if self.room_name not in ChatConsumer.active_player:
             ChatConsumer.active_player[self.room_name] = 0
 
@@ -72,6 +74,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if self.room_name not in ChatConsumer.change:
             ChatConsumer.change[self.room_name] = False    
 
+        # Add new user to the user list
         ChatConsumer.users[self.room_name].append(GameUser(str(self.scope['user']), 0))
 
         await self.update()
@@ -83,6 +86,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
+        # Disconnect the current user by removing him from the user list
         users = ChatConsumer.users[self.room_name]
 
         userPos = 0
@@ -91,7 +95,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 usersPos = i
         users.pop(userPos)
 
-        if len(ChatConsumer.users[self.room_name]) > 0:
+        
+        if len(ChatConsumer.users[self.room_name]) > 0 and ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].name == str(self.scope['user']):
             ChatConsumer.active_player[self.room_name] = (ChatConsumer.active_player[self.room_name] + 1) % len(ChatConsumer.users[self.room_name])
         else:
             ChatConsumer.active_player[self.room_name] = 0
@@ -99,23 +104,24 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.update()
 
     async def update(self):
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                'type': 'config_message',
-                'message': json.dumps(ChatConsumer.users[self.room_name], cls=GameUserEncoder),
-                'active_player': ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].name
-            }
-        )   
-        if not await GameController.getStatus(self.room_name):
+        if len(ChatConsumer.users[self.room_name]) > 0:
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
-                    'type': 'game_message', 
-                    'message': "end_game",
-                    'log' : ''
+                    'type': 'config_message',
+                    'message': json.dumps(ChatConsumer.users[self.room_name], cls=GameUserEncoder),
+                    'active_player': ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].name
                 }
-            )
+            )   
+            if not await GameController.getStatus(self.room_name):
+                await self.channel_layer.group_send(
+                    self.room_group_name,
+                    {
+                        'type': 'game_message', 
+                        'message': "end_game",
+                        'log' : ''
+                    }
+                )
         
 
     # Receive message from WebSocket
@@ -124,19 +130,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message = text_data_json['message']
         type = text_data_json['type']
 
-        log = ""
+        log = []
 
         if type == "game_message" and await GameController.getStatus(self.room_name):
             
             if message == "throw_dices" and ChatConsumer.flag[self.room_name] == "dices":
                 ChatConsumer.dices[self.room_name] = [randrange(1,6), randrange(1,6), randrange(1,6)]
 
-                log += f"{str(self.scope['user'])} rolled {ChatConsumer.dices[self.room_name]}\n"
+                log.append(f"{str(self.scope['user'])} rolled {ChatConsumer.dices[self.room_name]}\n")
                 score, flag = GameController.evaluateThrow(ChatConsumer.dices[self.room_name])
                 if flag != 2 and flag != 5:                    
                     ChatConsumer.users[self.room_name][ChatConsumer.active_player[self.room_name]].score += score
                     ChatConsumer.change[self.room_name] = True
-                    log += f"{str(self.scope['user'])} gained {score} points\n"
+                    log.append(f"{str(self.scope['user'])} gained {score} points\n")
                 elif flag == 2:
                     ChatConsumer.caillou[self.room_name] = score
                     ChatConsumer.flag[self.room_name] = "caillou"
@@ -147,7 +153,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     for user in ChatConsumer.users[self.room_name]:
                         if user.name == str(self.scope['user']):
                             user.score += ChatConsumer.caillou[self.room_name]
-                            log += f"{user.name} was first and gained {ChatConsumer.caillou[self.room_name]} points\n"
+                            log.append(f"{user.name} was first and gained {ChatConsumer.caillou[self.room_name]} points\n")
 
                     ChatConsumer.caillou[self.room_name] = 0
                     ChatConsumer.change[self.room_name] = True
@@ -159,7 +165,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     for user in ChatConsumer.users[self.room_name]:
                         if user.name not in ChatConsumer.grelotte[self.room_name]:
                             user.score -= self.PENALTY
-                            log += f"{user.name} was last and lost 10 points"                            
+                            log.append(f"{user.name} was last and lost 10 points")                       
 
                     ChatConsumer.grelotte[self.room_name] = set()
                     ChatConsumer.change[self.room_name] = True
@@ -169,7 +175,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     for user in ChatConsumer.users[self.room_name]:
                         if user.name == str(self.scope['user']):
                             user.score -= self.PENALTY
-                            log += f"{user.name} made a mistake that cost 10 points !\n"
+                            log.append(f"{user.name} made a mistake that cost 10 points !\n")
 
             # General game status    
             if ChatConsumer.change[self.room_name]:
@@ -177,7 +183,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 ChatConsumer.change[self.room_name] = False
             for user in ChatConsumer.users[self.room_name]:
                 if user.score >= self.WIN_SCORE:
-                    log += f"{user.name} won !\n"
+                    log.append(f"{user.name} won !\n")
                     await GameController.endOfGame(user,ChatConsumer.users[self.room_name],self.room_name)
 
         

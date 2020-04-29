@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'me7@ryo+hez+v1rc^d048(bjj-04sagzmi0rx45d2yt*cz+utf'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ["127.0.0.1","localhost", "culdechouette.srvz-webapp.he-arc.ch"]
+ALLOWED_HOSTS = ["127.0.0.1","localhost"]
 
 
 # Application definition
@@ -92,7 +92,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': os.environ.get('GROUPNAME', 'cdc_db'),
         'USER': os.environ.get('GROUPNAME', 'root'),
-        'PASSWORD': os.environ.get('PASSWORD', 'perceval'),
+        'PASSWORD': os.environ.get('PASSWORD', ''),
         'HOST': os.environ.get('MYSQL_HOST', '127.0.0.1'),
         'PORT': os.environ.get('MYSQL_PORT', '3306'),
         'OPTIONS': {
@@ -138,7 +138,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
-STATIC_ROOT = '/var/www/static'
+STATIC_ROOT= os.path.join(BASE_DIR,'static/')
 
 STATIC_URL = '/static/'
 

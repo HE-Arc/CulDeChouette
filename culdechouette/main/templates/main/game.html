@@ -99,11 +99,14 @@
                 }
                 else if (data.type == "game_message")
                 {
-                    log = document.createElement('p');
-                    log.textContent = data.log;
-                    log.classList.add("log");
                     let chat_log = document.querySelector('#chat-log')
-                    chat_log.appendChild(log);
+                    for(l in data.log)
+                    {
+                        log = document.createElement('p');
+                        log.textContent = data.log[l];
+                        log.classList.add("log");
+                        chat_log.appendChild(log);
+                    }
                     chat_log.scrollTop = chat_log.scrollHeight;
                     if (data.message == "throw_dices") rollDiceWithValues(data.dices);
                     if (data.message == "end_game") {
